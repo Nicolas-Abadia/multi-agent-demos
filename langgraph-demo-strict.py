@@ -5,10 +5,10 @@ from typing_extensions import TypedDict
 from dotenv import load_dotenv
 
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage, ToolMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage
+from langchain_openai import ChatOpenAI
 
 from langgraph.graph import StateGraph, START, END
-from langchain_openai import ChatOpenAI
 
 # Load environment variables
 load_dotenv()
@@ -21,10 +21,16 @@ researcher_llm = ChatOpenAI(
     temperature=0.7,
 )
 
-explainer_llm = ChatOpenAI(
+recommend_llm = ChatOpenAI(
     model_name="gpt-4",
     temperature=0.7,
 )
+
+search_llm = ChatOpenAI(
+    model_name="gpt-4", 
+    temperature=0.3
+)
+
 # Initialize Tavily search tool
 tavily_tool = TavilySearchResults(
     max_results=6,
@@ -33,14 +39,10 @@ tavily_tool = TavilySearchResults(
     include_domains=[],  # Example domains to include
     exclude_domains=["youtube.com", "tiktok.com", "reddit.com"],  # Example domains to exclude
     k=10
-)# Define the tool-calling node
-def call_tool(state: Dict) -> Dict:
-    messages = state["messages"]
 
-    search_llm = ChatOpenAI(
-    model_name="gpt-4", 
-    temperature=0.3
-    )
+)# Define the tool-calling node
+def search_tool(state: Dict) -> Dict:
+    messages = state["messages"]
     # First use LLM to refine the search query
     refine_messages = [
         SystemMessage(content='''
@@ -61,7 +63,7 @@ def call_tool(state: Dict) -> Dict:
     )
     formatted_results = json.dumps(search_results, indent=2)
     messages.append(AIMessage(content=json.dumps(formatted_results)))
-    print(f'\n====TOOL NODE=====\n{formatted_results}')
+    print(f'\n====SEARCH TOOL NODE=====\n{formatted_results}')
     return {"messages": messages}
 
 # Define the research node
@@ -80,7 +82,7 @@ def research(state: Dict) -> Dict:
     return {"messages": messages + [response]}
 
 # Define the explain node
-def explain(state: Dict) -> Dict:
+def recommend(state: Dict) -> Dict:
     messages = state["messages"]
     explain_messages = [
         SystemMessage(content='''
@@ -93,14 +95,14 @@ def explain(state: Dict) -> Dict:
             Use simple analogies when helpful and focus on practical advice.'''),
         *messages
     ]
-    response = explainer_llm.invoke(explain_messages)
+    response = recommend_llm.invoke(explain_messages)
     print(f"\n=====EXPLAIN NODE====={response}")
     return {"messages": messages + [response]}
 
 # Define routing logic
 def should_call_tool(state: Dict) -> str:
     query = state["messages"][-1].content.lower()
-    return "tool" if "search" in query else "research"
+    return "search" if "search" in query else "research"
 
 # Define the state schema
 class AppState(TypedDict):
@@ -108,15 +110,15 @@ class AppState(TypedDict):
 
 # Build the graph
 graph = StateGraph(AppState)
-graph.add_node("tool", call_tool)
+graph.add_node("search", search_tool)
 graph.add_node("research", research)
-graph.add_node("explain", explain)
+graph.add_node("recommend", recommend)
 
 # Define the edges
-graph.add_edge("tool", "research")
-graph.add_edge("research", "explain")
+graph.add_edge("search", "research")
+graph.add_edge("research", "recommend")
 graph.add_edge("explain", END)
-graph.set_entry_point("tool")
+graph.set_entry_point("search")
 
 
 # Compile the graph
