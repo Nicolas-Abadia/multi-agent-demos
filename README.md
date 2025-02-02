@@ -50,6 +50,43 @@ Throughout the workshop, participants will get hands-on experience building, tes
 - Necessary libraries as specified in `requirements.txt` (e.g., LangChain, LangGraph, etc.)
 - Access to external APIs/tools (e.g., search APIs, language model services)
 
+### API Keys Setup
+
+This project requires access to external services. Follow these instructions to obtain and configure your API keys:
+
+#### OpenAI API Key
+
+1. **Sign Up / Log In:**  
+   Visit [OpenAI Platform](https://platform.openai.com/) and sign up for an account if you don't already have one.
+
+2. **Generate API Key:**  
+   Navigate to the API keys section in your account settings. Click on "Create new secret key" and copy the generated key.
+
+3. **Set Environment Variable:**  
+   Create or update your `.env` file in the project root and add:
+
+   ```bash
+   OPENAI_API_KEY=your_openai_api_key_here
+
+   ```
+
+#### Tavily API Key
+
+1. **Sign Up / Log In:**
+   Go to the [Tavily](https://tavily.com/) website and register for an account if needed.
+
+2. **Generate API Key:**
+   In your Tavily account dashboard, locate the API key generation section and create a new API key. Copy the key.
+
+3. **Set Environment Variable:**
+   In your .env file, add:
+
+   ```bash
+   TAVILY_API_KEY=your_tavily_api_key_here
+   ```
+
+   Note: Make sure to load these environment variables in your application (for example, using the `python-dotenv` package).
+
 ### Installation
 
 1. Clone the repository:
@@ -64,3 +101,5 @@ Throughout the workshop, participants will get hands-on experience building, tes
    ```bash
    pip3 install -r requirements.txt
    ```
+
+3. Configure API keys and environment variables as needed (see API Keys Setup).
