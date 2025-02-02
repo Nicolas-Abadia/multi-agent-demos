@@ -16,6 +16,11 @@ load_dotenv()
 # Initialize the LLM
 # Initialize different LLMs with their own system messages
 
+search_llm = ChatOpenAI(
+    model_name="gpt-4", 
+    temperature=0.3
+)
+
 researcher_llm = ChatOpenAI(
     model_name="gpt-4", 
     temperature=0.7,
@@ -26,12 +31,7 @@ recommend_llm = ChatOpenAI(
     temperature=0.7,
 )
 
-search_llm = ChatOpenAI(
-    model_name="gpt-4", 
-    temperature=0.3
-)
-
-# Initialize Tavily search tool
+# Initialize Tavily search tool - explain how the agents can use numerous different tools
 tavily_tool = TavilySearchResults(
     max_results=6,
     search_depth="advanced",
@@ -40,16 +40,22 @@ tavily_tool = TavilySearchResults(
     exclude_domains=["youtube.com", "tiktok.com", "reddit.com"],  # Example domains to exclude
     k=10
 
-)# Define the tool-calling node
+)
+
+# Define the state schema - keeps track of the conversation history
+class AppState(TypedDict):
+    messages: list[BaseMessage]
+
+# Define the tool-calling node
 def search_tool(state: Dict) -> Dict:
     messages = state["messages"]
     # First use LLM to refine the search query
     refine_messages = [
         SystemMessage(content='''
             You are a search query specialist. Your task is to reformulate user 
-            golf queries into specific, targeted search terms that will yield the most relevant golf tips and drills.
-            Do NOT use tiktok or youtube in the search query or as results. Find specific golf drills 
-            for the respective problem. Look into drills.
+            vacation preferences into specific, targeted search terms that will yield the most relevant vacation destinations.
+            Do NOT use tiktok or youtube in the search query or as results. Find specific destinations 
+            for the respective problem. Look into lower and higher end locations.
             Return only the search query, nothing else.'''),
 
         HumanMessage(content=f"Convert this request into a specific search query: {messages[-1].content}")
@@ -71,7 +77,7 @@ def research(state: Dict) -> Dict:
     messages = state["messages"]
     research_messages = [
         SystemMessage(content='''
-            You are an expert golf research analyst. Analyze the search results and 
+            You are an expert vacation planner and research analyst. Analyze the search results and 
             extract key findings, methodologies, and important conclusions about fixing 
             the golfer's specific problem. Focus on actionable drills and fixes.
             Organize your response into clear sections with specific tips and drills.'''),
@@ -84,29 +90,20 @@ def research(state: Dict) -> Dict:
 # Define the explain node
 def recommend(state: Dict) -> Dict:
     messages = state["messages"]
-    explain_messages = [
+    recommend_messages = [
         SystemMessage(content='''
-            You are an expert golf instructor known for clear, practical explanations.
-            Take the research findings and explain them in simple, actionable steps.
+            You are an expert vacation planner known for clear professional recommendations.
+            Take the research findings recommend top vacation destinations.
             Include:
-            1. A clear explanation of what's causing the problem
-            2. 3-4 specific drills to fix it
-            3. Common mistakes to avoid
-            Use simple analogies when helpful and focus on practical advice.'''),
+            1. A list of the top vacation destinations meeting the user query
+            2. What makes these destinations ideal for the user's needs
+            3. Include amenities, activities, and unique features of each destination
+            .'''),
         *messages
     ]
-    response = recommend_llm.invoke(explain_messages)
+    response = recommend_llm.invoke(recommend_messages)
     print(f"\n=====EXPLAIN NODE====={response}")
     return {"messages": messages + [response]}
-
-# Define routing logic
-def should_call_tool(state: Dict) -> str:
-    query = state["messages"][-1].content.lower()
-    return "search" if "search" in query else "research"
-
-# Define the state schema
-class AppState(TypedDict):
-    messages: list[BaseMessage]
 
 # Build the graph
 graph = StateGraph(AppState)
@@ -115,11 +112,10 @@ graph.add_node("research", research)
 graph.add_node("recommend", recommend)
 
 # Define the edges
+graph.set_entry_point("search")
 graph.add_edge("search", "research")
 graph.add_edge("research", "recommend")
-graph.add_edge("explain", END)
-graph.set_entry_point("search")
-
+graph.add_edge("recommend", END)
 
 # Compile the graph
 app = graph.compile()
@@ -135,5 +131,5 @@ def run_conversation(user_input: str):
     return output["messages"][-1].content
 
 if __name__ == "__main__":
-    result = run_conversation("I keep topping the ball")
+    result = run_conversation("Im looking for a relaxing spa vacation in a bleak desert environment")
     print(result)
