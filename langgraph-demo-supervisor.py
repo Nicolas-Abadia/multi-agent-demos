@@ -1,3 +1,17 @@
+'''
+
+EXAMPLE OF A SUPERVISOR AGENT WORKFLOW
+GOAL: Create a workflow that can handle a golf-related query and route it to the appropriate worker
+WORKFLOW: 1. Tavily search for golf tips
+          2. Researcher analyzes search results and extracts relevant golf tips
+          3. Supervisor routes to the next worker
+          4. Drill creator formats and structures the information into clear, actionable steps
+
+'''
+
+
+
+
 from dotenv import load_dotenv
 from typing import Dict, Literal, List, TypedDict, Union
 from typing_extensions import TypedDict
