@@ -93,7 +93,7 @@ This project requires access to external services. Follow these instructions to 
 
    ```bash
    git clone https://github.com/devonstreelman/multi-agent-demos.git
-   cd multi-agent-orchestration-workshop
+   cd multi-agent-demos
    ```
 
 2. Install dependencies
