@@ -1,4 +1,3 @@
-
 import json
 from typing import Dict
 from typing_extensions import TypedDict
@@ -48,6 +47,15 @@ class AppState(TypedDict):
 
 # Define the tool-calling node
 def search_tool(state: Dict) -> Dict:
+    """
+    Refines the user's vacation preferences into a specific search query and retrieves search results.
+
+    Args:
+        state (Dict): The current state of the conversation, including messages.
+
+    Returns:
+        Dict: The updated state with the search results appended to the messages.
+    """
     messages = state["messages"]
     # First use LLM to refine the search query
     refine_messages = [
@@ -74,6 +82,15 @@ def search_tool(state: Dict) -> Dict:
 
 # Define the research node
 def research(state: Dict) -> Dict:
+    """
+    Analyzes search results and extracts key findings about vacation destinations.
+
+    Args:
+        state (Dict): The current state of the conversation, including messages.
+
+    Returns:
+        Dict: The updated state with the research findings appended to the messages.
+    """
     messages = state["messages"]
     research_messages = [
         SystemMessage(content='''
@@ -89,6 +106,15 @@ def research(state: Dict) -> Dict:
 
 # Define the explain node
 def recommend(state: Dict) -> Dict:
+    """
+    Provides professional recommendations for vacation destinations based on research findings.
+
+    Args:
+        state (Dict): The current state of the conversation, including messages.
+
+    Returns:
+        Dict: The updated state with the recommendations appended to the messages.
+    """
     messages = state["messages"]
     recommend_messages = [
         SystemMessage(content='''
@@ -122,6 +148,15 @@ app = graph.compile()
 
 # Define your function to run the graph
 def run_conversation(user_input: str):
+    """
+    Runs the conversation graph with the given user input.
+
+    Args:
+        user_input (str): The user's input message.
+
+    Returns:
+        str: The final output message from the conversation.
+    """
     initial_state = {
         "messages": [
             HumanMessage(content=user_input)
