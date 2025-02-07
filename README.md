@@ -1,6 +1,6 @@
 # Multi-Agent Orchestration Workshop Program
 
-Welcome to the Multi-Agent Orchestration Program! This project was built as a hands-on workshop for tech clubs on campus at UC Davis, designed to showcase the power and flexibility of coordinating multiple specialized agents using modern frameworks like LangChain and LangGraph.
+Welcome to the Multi-Agent Orchestration Program. This project was built as a hands-on workshop for tech clubs on campus at UC Davis, designed to showcase the power and flexibility of coordinating multiple specialized agents using modern frameworks like LangChain and LangGraph.
 
 ## Purpose
 
@@ -93,7 +93,7 @@ This project requires access to external services. Follow these instructions to 
 
    ```bash
    git clone https://github.com/devonstreelman/multi-agent-demos.git
-   cd multi-agent-orchestration-workshop
+   cd multi-agent-demos
    ```
 
 2. Install dependencies
